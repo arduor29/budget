@@ -50,7 +50,7 @@ textarea{width:100%;height:120px;background:var(--inp);color:var(--tx);border:1p
 <script>
 const KEY='studibudget-v2';
 const T={home:['Übersicht','Home'],set:['Einstellungen','Settings'],data:['Daten','Data'],
-left:['Noch verfügbar','Left to spend'],perday:['pro Tag','per day'],carry:['Übertrag Vormonat','Carried over'],
+track:['Tracking-Start (Monat)','Start tracking from (month)'],left:['Noch verfügbar','Left to spend'],perday:['pro Tag','per day'],carry:['Übertrag Vormonat','Carried over'],
 inc:['Einnahmen / Monat','Monthly income'],fix:['Fixkosten','Fixed costs'],extra:['Zusatzeinnahmen','Extra income'],
 add:['+ Hinzufügen','+ Add'],label:['Bezeichnung','Label'],amt:['Betrag','Amount'],
 newx:['Ausgabe erfassen','Add expense'],editx:['Ausgabe bearbeiten','Edit expense'],cat:['Kategorie','Category'],date:['Datum','Date'],note:['Notiz (optional)','Note (optional)'],
@@ -69,12 +69,13 @@ g2:['Sperrkonto: Konto als Finanzierungsnachweis mit fester Monatsrate','Blocked
 g3:['Rückmeldung: Semesterbeitrag zahlen, um eingeschrieben zu bleiben','Re-registration: pay the fee to stay enrolled'],
 g4:['Rundfunkbeitrag: 18,36 € pro Monat und Wohnung (WG teilen)','TV/radio fee: €18.36 per month per household (split in a flat)']};
 const id=()=>Date.now()+Math.random();
-const def=()=>({mode:'both',roll:true,limit:603,sem:{fee:350,start:10},
+const def=()=>({mode:'both',roll:true,limit:603,track:'',sem:{fee:350,start:10},
 income:[{id:1,k:'sperr',a:992},{id:2,k:'job',a:0},{id:3,k:'fam',a:0}],
 fixed:[{id:4,k:'rent',a:450},{id:5,k:'kv',a:125},{id:6,k:'rf',a:18.36},{id:7,k:'dt',a:63},{id:8,k:'net',a:30}],
 cats:[{id:'groc',e:'🛒',b:200},{id:'dine',e:'🍽️',b:80},{id:'fun',e:'🎉',b:50},{id:'trans',e:'🚌',b:20},{id:'oth',e:'🧾',b:0}],tx:[]});
 let S=def(),tab='home',ym=new Date().toISOString().slice(0,7),pm='card',editId=null,adding=null;
 try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(def(),JSON.parse(r))}catch(e){}
+if(S.track&&S.track>ym)ym=S.track;
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const t=k=>{const[d,e]=T[k]||[k,k];return S.mode==='de'?d:S.mode==='en'?e:(d===e?d:d+' · '+e)};
 const nm=o=>o.k?t(o.k):(o.l||t(o.id));
@@ -92,7 +93,7 @@ function base(m){
 }
 function bal(m,first){return m<first?0:base(m).b+(S.roll?bal(prev(m),first):0)}
 function calc(){
- const first=S.tx.reduce((a,x)=>x.date.slice(0,7)<a?x.date.slice(0,7):a,nowYM());
+ const first=S.track||S.tx.reduce((a,x)=>x.date.slice(0,7)<a?x.date.slice(0,7):a,nowYM());
  const c=base(ym),carry=S.roll&&ym>first?bal(prev(ym),first):0;
  const now=new Date(),cur=ym===nowYM(),dim=new Date(+ym.slice(0,4),+ym.slice(5),0).getDate();
  return{...c,carry,left:c.b+carry,dl:cur?dim-now.getDate()+1:0};
@@ -130,6 +131,7 @@ function catRows(){return S.cats.map(k=>`<div class="row"><span>${k.e} ${esc(nm(
 function viewSet(){
  return listCard(t('inc'),'income',S.income)+(sum(S.income.filter(o=>o.k==='job'))>S.limit?`<div class="card neg">${t('over')}</div>`:'')
  +listCard(t('fix'),'fixed',S.fixed)
+ +`<div class="card"><h2>${t('track')}</h2><select data-track><option value="">–</option>${Array.from({length:27},(_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-2+i);const v=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');return `<option value="${v}" ${S.track===v?'selected':''}>${d.toLocaleDateString('de-DE',{month:'long',year:'numeric'})}</option>`}).join('')}</select></div>`
  +`<div class="card"><h2>${t('cats')}</h2>${catRows()}
  ${adding==='cat'?`<div class="g g3" style="margin-top:6px"><input id="a-l" placeholder="🎓 ${t('label')}"><input id="a-a" inputmode="decimal" placeholder="€"><button class="btn p" data-addok="cat">OK</button></div>`:`<button class="btn s" data-add="cat">${t('add')}</button>`}</div>
  <div class="card"><h2>${t('sem')}</h2><div class="g g2"><div><div class="mu">${t('fee')}</div><input data-fee inputmode="decimal" value="${String(S.sem.fee).replace('.',',')}"></div>
@@ -152,7 +154,7 @@ function render(){
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  if(d.tab){tab=d.tab;adding=null;render()}
- else if(d.m){const x=new Date(ym+'-01');x.setMonth(x.getMonth()+ +d.m);ym=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0');render()}
+ else if(d.m){const x=new Date(ym+'-01');x.setMonth(x.getMonth()+ +d.m);const ny=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0');if(S.track&&ny<S.track)return;ym=ny;render()}
  else if(d.lang!==undefined){S.mode={both:'de',de:'en',en:'both'}[S.mode];save();render()}
  else if(d.pm){pm=d.pm;render()}
  else if(d.add){adding=d.add;render()}
@@ -186,6 +188,7 @@ document.addEventListener('change',e=>{
  else if(d.fee!==undefined)S.sem.fee=num(el.value);
  else if(d.start!==undefined)S.sem.start=+el.value;
  else if(d.lim!==undefined)S.limit=num(el.value);
+ else if(d.track!==undefined){S.track=el.value;if(S.track&&ym<S.track)ym=S.track}
  else if(d.roll!==undefined)S.roll=el.checked;
  else return;
  save();render();

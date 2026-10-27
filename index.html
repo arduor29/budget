@@ -48,7 +48,7 @@ textarea{width:100%;height:120px;background:var(--inp);color:var(--tx);border:1p
 <nav id="nav"></nav>
 <script>
 const KEY='studibudget-v3';
-const T={home:['Übersicht','Home'],income:['Einnahmen','Income'],totinc:['Einnahmen gesamt','Total income'],newi:['Einnahme erfassen','Add income'],set:['Einstellungen','Settings'],data:['Daten','Data'],
+const T={home:['Übersicht','Home'],income:['Einnahmen','Income'],totinc:['Einnahmen gesamt','Total income'],srcs:['Einnahmequellen (Namen anpassen)','Income sources (rename)'],newi:['Einnahme erfassen','Add income'],set:['Einstellungen','Settings'],data:['Daten','Data'],
 left:['Noch verfügbar','Left to spend'],perday:['pro Tag','per day'],carry:['Übertrag Vorperiode','Carried over'],
 inc:['Einnahmen / Zeitraum','Income / period'],fix:['Fixkosten / Zeitraum','Fixed costs / period'],extra:['Zusatzeinnahmen','Extra income'],
 add:['+ Hinzufügen','+ Add'],label:['Bezeichnung','Label'],
@@ -69,7 +69,7 @@ g2:['Sperrkonto: Konto als Finanzierungsnachweis mit fester Monatsrate','Blocked
 g3:['Rückmeldung: Semesterbeitrag zahlen, um eingeschrieben zu bleiben','Re-registration: pay the fee to stay enrolled'],
 g4:['Rundfunkbeitrag: 18,36 € pro Monat und Wohnung (WG teilen)','TV/radio fee: €18.36 per month per household (split in a flat)']};
 const id=()=>String(Date.now()+Math.random());
-const def=()=>({mode:'both',roll:true,limit:603,periods:[],sem:{fee:350,start:10},
+const def=()=>({mode:'both',roll:true,limit:603,periods:[],srcs:[{id:'sperr',k:'sperr'},{id:'job',k:'job'},{id:'fam',k:'fam'},{id:'oth',k:'oth'}],sem:{fee:350,start:10},
 income:[{id:'1',k:'sperr',a:992},{id:'2',k:'job',a:0},{id:'3',k:'fam',a:0}],
 fixed:[{id:'4',k:'rent',a:450},{id:'5',k:'kv',a:125},{id:'6',k:'rf',a:18.36},{id:'7',k:'dt',a:63},{id:'8',k:'net',a:30}],
 cats:[{id:'groc',e:'🛒',b:200},{id:'dine',e:'🍽️',b:80},{id:'fun',e:'🎉',b:50},{id:'trans',e:'🚌',b:20},{id:'oth',e:'🧾',b:0}],tx:[]});
@@ -146,11 +146,12 @@ function viewInc(){
  const c=calc(),p=c.p,ents=c.tx.filter(x=>x.type==='inc').sort((a,b)=>b.date.localeCompare(a.date));
  const rec=sum(S.income),job=sum(S.income.filter(o=>o.k==='job'));
  return periodBar(c)+`<div class="card hero"><h2 style="color:#ffffffb3">${t('totinc')}</h2><div class="big">${eur(rec+c.extra)}</div><div class="mu">${t('inc')}: ${eur(rec)} · ${t('extra')}: ${eur(c.extra)}</div></div>
- <div class="card"><h2>${t('newi')}</h2><div class="g g2"><select id="i-s">${['sperr','job','fam','oth'].map(k=>`<option value="${k}">${t(k)}</option>`).join('')}</select><input id="i-a" inputmode="decimal" placeholder="500,00"></div>
+ <div class="card"><h2>${t('newi')}</h2><div class="g g2"><select id="i-s">${S.srcs.map(o=>`<option value="${o.id}">${esc(nm(o))}</option>`).join('')}</select><input id="i-a" inputmode="decimal" placeholder="500,00"></div>
  <div class="g g2" style="margin-top:8px"><input id="i-n" maxlength="60" placeholder="${t('note')}"><input id="i-d" type="date" min="${p.s}" max="${p.e}" value="${defDate(p)}"></div>
  <div style="margin-top:10px"><button class="btn p" style="width:100%" data-isave>${t('save')}</button></div></div>
- <div class="card"><h2>${t('extra')}</h2>${ents.length?ents.map(x=>`<div class="row"><div><b>${t(x.cat||'extra')}</b><div class="mu">${fd(x.date)}${x.note?' · '+esc(x.note):''}</div></div><div><b style="color:var(--ac)">+${eur(x.amt)}</b><button class="x" data-rm="tx:${x.id}">✕</button></div></div>`).join(''):`<div class="mu">–</div>`}</div>`
- +listCard(t('inc'),'income',S.income)+(job>S.limit?`<div class="card neg">${t('over')}</div>`:'');
+ <div class="card"><h2>${t('extra')}</h2>${ents.length?ents.map(x=>`<div class="row"><div><b>${(()=>{const o=S.srcs.find(s=>s.id===x.cat);return o?esc(nm(o)):t(T[x.cat]?x.cat:'extra')})()}</b><div class="mu">${fd(x.date)}${x.note?' · '+esc(x.note):''}</div></div><div><b style="color:var(--ac)">+${eur(x.amt)}</b><button class="x" data-rm="tx:${x.id}">✕</button></div></div>`).join(''):`<div class="mu">–</div>`}</div>`
+ +listCard(t('inc'),'income',S.income)+(job>S.limit?`<div class="card neg">${t('over')}</div>`:'')
+ +`<div class="card"><h2>${t('srcs')}</h2>${S.srcs.map(o=>`<div class="g" style="grid-template-columns:1fr auto;margin:6px 0"><input data-sn="${o.id}" value="${o.k?'':esc(o.l||'')}" placeholder="${esc(nm(o))}"><button class="x" data-rm="src:${o.id}">✕</button></div>`).join('')}<button class="btn s" data-sadd>${t('add')}</button></div>`;
 }
 function viewSet(){
  return `<div class="card"><h2><span>${t('periods')}</span><button class="btn s" data-padd>${t('add')}</button></h2>
@@ -187,6 +188,7 @@ document.addEventListener('click',e=>{
   S.periods.push({id:id(),s,e:eom(s)});pk=s;save();render();
  }
  else if(d.isave!==undefined){const a=num(document.getElementById('i-a').value);if(a<=0)return document.getElementById('i-a').focus();S.tx.push({id:id(),type:'inc',amt:a,cat:document.getElementById('i-s').value,pm:'',date:document.getElementById('i-d').value||defDate(curP()),note:document.getElementById('i-n').value});save();render()}
+ else if(d.sadd!==undefined){S.srcs.push({id:'s'+Date.now(),l:'Neue Quelle'});save();render()}
  else if(d.add){adding=d.add;render()}
  else if(d.addok){
   const l=document.getElementById('a-l').value.trim(),a=num(document.getElementById('a-a').value);
@@ -199,6 +201,7 @@ document.addEventListener('click',e=>{
   if(k==='tx'||k==='extra')S.tx=S.tx.filter(x=>x.id!==v);
   else if(k==='cat')S.cats=S.cats.filter(x=>x.id!==v);
   else if(k==='per'){S.periods=S.periods.filter(x=>x.id!==v);pk=null}
+  else if(k==='src'){if(S.srcs.length>1)S.srcs=S.srcs.filter(x=>x.id!==v)}
   else S[k]=S[k].filter(x=>x.id!==v);
   save();render()}
  else if(d.ed){editId=d.ed;render();window.scrollTo(0,200)}
@@ -219,6 +222,7 @@ document.addEventListener('change',e=>{
  if(d.pk!==undefined){pk=el.value;render();return}
  if(d.ps){const o=S.periods.find(x=>x.id===d.ps);if(!o||!el.value)return render();
   if(d.f==='s'&&pk===o.s)pk=el.value;o[d.f]=el.value;if(o.e<o.s)o.e=o.s}
+ else if(d.sn){const o=S.srcs.find(x=>x.id===d.sn),v=el.value.trim();if(o&&v){o.l=v;delete o.k}}
  else if(d.cb)S.cats.find(c=>c.id===d.cb).b=num(el.value);
  else if(d.fee!==undefined)S.sem.fee=num(el.value);
  else if(d.start!==undefined)S.sem.start=+el.value;

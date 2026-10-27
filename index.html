@@ -133,7 +133,7 @@ function viewSet(){
  +`<div class="card"><h2>${t('cats')}</h2>${catRows()}
  ${adding==='cat'?`<div class="g g3" style="margin-top:6px"><input id="a-l" placeholder="🎓 ${t('label')}"><input id="a-a" inputmode="decimal" placeholder="€"><button class="btn p" data-addok="cat">OK</button></div>`:`<button class="btn s" data-add="cat">${t('add')}</button>`}</div>
  <div class="card"><h2>${t('sem')}</h2><div class="g g2"><div><div class="mu">${t('fee')}</div><input data-fee inputmode="decimal" value="${String(S.sem.fee).replace('.',',')}"></div>
- <div><div class="mu">${t('start')}</div><select data-start><option value="10" ${S.sem.start==10?'selected':''}>${t('wise')}</option><option value="4" ${S.sem.start==4?'selected':''}>${t('sose')}</option></select></div></div>
+ <div><div class="mu">${t('start')}</div><select data-start>${[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>`<option value="${m}" ${S.sem.start==m?'selected':''}>${new Date(2000,m-1,1).toLocaleDateString('de-DE',{month:'long'})}</option>`).join('')}</select></div></div>
  <div class="row" style="margin-top:8px"><span>${t('roll')}</span><input type="checkbox" style="width:22px" data-roll ${S.roll?'checked':''}></div>
  <div class="row"><span class="mu">${t('limit')}</span><input style="width:90px;text-align:right" data-lim value="${S.limit}"></div></div>
  <div class="card"><h2>${t('gloss')}</h2>${['g1','g2','g3','g4'].map(k=>`<div class="mu" style="margin:4px 0">${t(k)}</div>`).join('')}</div>`;

@@ -48,7 +48,7 @@ textarea{width:100%;height:120px;background:var(--inp);color:var(--tx);border:1p
 <nav id="nav"></nav>
 <script>
 const KEY='studibudget-v3';
-const T={home:['Übersicht','Home'],set:['Einstellungen','Settings'],data:['Daten','Data'],
+const T={home:['Übersicht','Home'],income:['Einnahmen','Income'],totinc:['Einnahmen gesamt','Total income'],newi:['Einnahme erfassen','Add income'],set:['Einstellungen','Settings'],data:['Daten','Data'],
 left:['Noch verfügbar','Left to spend'],perday:['pro Tag','per day'],carry:['Übertrag Vorperiode','Carried over'],
 inc:['Einnahmen / Zeitraum','Income / period'],fix:['Fixkosten / Zeitraum','Fixed costs / period'],extra:['Zusatzeinnahmen','Extra income'],
 add:['+ Hinzufügen','+ Add'],label:['Bezeichnung','Label'],
@@ -139,14 +139,22 @@ function viewHome(){
  <div style="margin-top:10px;display:flex;gap:8px"><button class="btn p" style="flex:1" data-save>${t('save')}</button>${ed?`<button class="btn" data-cancel>${t('cancel')}</button>`:''}</div></div>
  <div class="card"><h2>${t('exps')}</h2>${exps.length?exps.map(x=>{const k=S.cats.find(c=>c.id===x.cat)||{e:'🧾',id:x.cat};return `<div class="row"><div><b>${k.e} ${esc(nm(k))}</b><div class="mu">${fd(x.date)} · ${t(x.pm)}${x.note?' · '+esc(x.note):''}</div></div><div><b>−${eur(x.amt)}</b><button class="x" data-ed="${x.id}">✎</button><button class="x" data-rm="tx:${x.id}">✕</button></div></div>`}).join(''):`<div class="mu">${t('none')}</div>`}</div>
  <div class="card"><h2>${t('bycat')}</h2>${S.cats.map(k=>{const s=c.spent[k.id]||0,pc=k.b>0?Math.min(100,s/k.b*100):0;return `<div style="margin:8px 0"><div class="row" style="padding:0"><span>${k.e} ${esc(nm(k))}</span><b>${eur(s)}${k.b>0?' / '+eur(k.b):''}</b></div>${k.b>0?`<div class="bar ${s>k.b?'o':''}"><i style="width:${pc}%"></i></div>`:''}</div>`}).join('')}</div>
- ${listCard(t('extra'),'extra',extra,'tx')}
  <div class="card"><h2>${t('sem')}</h2><div class="row"><span>${t('monthly')}</span><b>${eur(sm)}</b></div><div class="row"><span>${t('saved')}</span><b>${eur(sm*el)} / ${eur(S.sem.fee)}</b></div><div class="bar"><i style="width:${el/6*100}%"></i></div></div>`;
 }
 const catRows=()=>S.cats.map(k=>`<div class="row"><span>${k.e} ${esc(nm(k))}</span><span><input style="width:90px;text-align:right" inputmode="decimal" data-cb="${k.id}" value="${String(k.b).replace('.',',')}"> <button class="x" data-rm="cat:${k.id}">✕</button></span></div>`).join('');
+function viewInc(){
+ const c=calc(),p=c.p,ents=c.tx.filter(x=>x.type==='inc').sort((a,b)=>b.date.localeCompare(a.date));
+ const rec=sum(S.income),job=sum(S.income.filter(o=>o.k==='job'));
+ return periodBar(c)+`<div class="card hero"><h2 style="color:#ffffffb3">${t('totinc')}</h2><div class="big">${eur(rec+c.extra)}</div><div class="mu">${t('inc')}: ${eur(rec)} · ${t('extra')}: ${eur(c.extra)}</div></div>
+ <div class="card"><h2>${t('newi')}</h2><div class="g g2"><select id="i-s">${['sperr','job','fam','oth'].map(k=>`<option value="${k}">${t(k)}</option>`).join('')}</select><input id="i-a" inputmode="decimal" placeholder="500,00"></div>
+ <div class="g g2" style="margin-top:8px"><input id="i-n" maxlength="60" placeholder="${t('note')}"><input id="i-d" type="date" min="${p.s}" max="${p.e}" value="${defDate(p)}"></div>
+ <div style="margin-top:10px"><button class="btn p" style="width:100%" data-isave>${t('save')}</button></div></div>
+ <div class="card"><h2>${t('extra')}</h2>${ents.length?ents.map(x=>`<div class="row"><div><b>${t(x.cat||'extra')}</b><div class="mu">${fd(x.date)}${x.note?' · '+esc(x.note):''}</div></div><div><b style="color:var(--ac)">+${eur(x.amt)}</b><button class="x" data-rm="tx:${x.id}">✕</button></div></div>`).join(''):`<div class="mu">–</div>`}</div>`
+ +listCard(t('inc'),'income',S.income)+(job>S.limit?`<div class="card neg">${t('over')}</div>`:'');
+}
 function viewSet(){
  return `<div class="card"><h2><span>${t('periods')}</span><button class="btn s" data-padd>${t('add')}</button></h2>
  ${S.periods.length?periods().map(p=>`<div class="g g4" style="margin:6px 0"><input type="date" data-ps="${p.id}" data-f="s" value="${p.s}"><input type="date" data-ps="${p.id}" data-f="e" value="${p.e}"><button class="x" data-rm="per:${p.id}">✕</button></div>`).join(''):`<div class="mu">${t('autoh')}</div>`}</div>`
- +listCard(t('inc'),'income',S.income)+(sum(S.income.filter(o=>o.k==='job'))>S.limit?`<div class="card neg">${t('over')}</div>`:'')
  +listCard(t('fix'),'fixed',S.fixed)
  +`<div class="card"><h2>${t('cats')}</h2>${catRows()}
  ${adding==='cat'?`<div class="g g3" style="margin-top:6px"><input id="a-l" placeholder="🎓 ${t('label')}"><input id="a-a" inputmode="decimal" placeholder="€"><button class="btn p" data-addok="cat">OK</button></div>`:`<button class="btn s" data-add="cat">${t('add')}</button>`}</div>
@@ -164,8 +172,8 @@ function viewData(){
  <div class="card"><button class="btn" data-reset>${t('reset')}</button></div>`;
 }
 function render(){
- app.innerHTML=`<header><h1>StudiBudget €</h1><button class="btn s" data-lang>${S.mode==='both'?'DE·EN':S.mode.toUpperCase()}</button></header>${{home:viewHome,set:viewSet,data:viewData}[tab]()}`;
- nav.innerHTML=['home','set','data'].map(k=>`<button class="${tab===k?'on':''}" data-tab="${k}">${t(k)}</button>`).join('');
+ app.innerHTML=`<header><h1>StudiBudget €</h1><button class="btn s" data-lang>${S.mode==='both'?'DE·EN':S.mode.toUpperCase()}</button></header>${{home:viewHome,income:viewInc,set:viewSet,data:viewData}[tab]()}`;
+ nav.innerHTML=['home','income','set','data'].map(k=>`<button class="${tab===k?'on':''}" data-tab="${k}">${t(k)}</button>`).join('');
 }
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
@@ -178,6 +186,7 @@ document.addEventListener('click',e=>{
   const s=ps.length?addDays(ps[ps.length-1].e,1):iso(new Date(n.getFullYear(),n.getMonth()+1,1));
   S.periods.push({id:id(),s,e:eom(s)});pk=s;save();render();
  }
+ else if(d.isave!==undefined){const a=num(document.getElementById('i-a').value);if(a<=0)return document.getElementById('i-a').focus();S.tx.push({id:id(),type:'inc',amt:a,cat:document.getElementById('i-s').value,pm:'',date:document.getElementById('i-d').value||defDate(curP()),note:document.getElementById('i-n').value});save();render()}
  else if(d.add){adding=d.add;render()}
  else if(d.addok){
   const l=document.getElementById('a-l').value.trim(),a=num(document.getElementById('a-a').value);

@@ -33,32 +33,32 @@ h2{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);
 .bar i{display:block;height:100%;background:var(--ac)}
 .bar.o i{background:var(--bad)}
 input,select{width:100%;background:var(--inp);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:10px;font:inherit}
-.g{display:grid;gap:8px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:2fr 1fr auto}
+.g{display:grid;gap:8px}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:2fr 1fr auto}.g4{grid-template-columns:1fr 1fr auto;align-items:center}
 .seg{display:flex;gap:6px;margin-bottom:8px}.seg .btn{flex:1}.seg .on{background:var(--ac);color:var(--act);border-color:var(--ac)}
 nav{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--bd);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
 nav button{flex:1;border:0;background:none;color:var(--mu);padding:12px 4px;font:inherit;font-size:12px;cursor:pointer}
 nav button.on{color:var(--ac);font-weight:700}
-.mon{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mon{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
 .x{border:0;background:none;color:var(--mu);cursor:pointer;font-size:16px;padding:2px 6px}
 textarea{width:100%;height:120px;background:var(--inp);color:var(--tx);border:1px solid var(--bd);border-radius:10px;padding:8px;font:12px monospace}
-.pos{color:var(--ac);font-weight:600}
 </style>
 </head>
 <body>
 <div class="wrap" id="app"></div>
 <nav id="nav"></nav>
 <script>
-const KEY='studibudget-v2';
+const KEY='studibudget-v3';
 const T={home:['Übersicht','Home'],set:['Einstellungen','Settings'],data:['Daten','Data'],
-track:['Tracking-Start (Monat)','Start tracking from (month)'],left:['Noch verfügbar','Left to spend'],perday:['pro Tag','per day'],carry:['Übertrag Vormonat','Carried over'],
-inc:['Einnahmen / Monat','Monthly income'],fix:['Fixkosten','Fixed costs'],extra:['Zusatzeinnahmen','Extra income'],
-add:['+ Hinzufügen','+ Add'],label:['Bezeichnung','Label'],amt:['Betrag','Amount'],
-newx:['Ausgabe erfassen','Add expense'],editx:['Ausgabe bearbeiten','Edit expense'],cat:['Kategorie','Category'],date:['Datum','Date'],note:['Notiz (optional)','Note (optional)'],
+left:['Noch verfügbar','Left to spend'],perday:['pro Tag','per day'],carry:['Übertrag Vorperiode','Carried over'],
+inc:['Einnahmen / Zeitraum','Income / period'],fix:['Fixkosten / Zeitraum','Fixed costs / period'],extra:['Zusatzeinnahmen','Extra income'],
+add:['+ Hinzufügen','+ Add'],label:['Bezeichnung','Label'],
+newx:['Ausgabe erfassen','Add expense'],editx:['Ausgabe bearbeiten','Edit expense'],note:['Notiz (optional)','Note (optional)'],
 save:['Speichern','Save'],cancel:['Abbrechen','Cancel'],exps:['Ausgaben','Expenses'],none:['Noch keine Ausgaben','No expenses yet'],
-bycat:['Nach Kategorie','By category'],sem:['Semesterbeitrag-Rücklage','Semester fee fund'],monthly:['Monatlich zurücklegen','Set aside monthly'],saved:['Angespart','Saved'],
-fee:['Semesterbeitrag (€)','Semester fee (€)'],start:['Semesterstart','Semester start'],wise:['Wintersemester (Okt)','Winter term (Oct)'],sose:['Sommersemester (Apr)','Summer term (Apr)'],
-roll:['Restbetrag in den Folgemonat übertragen','Roll leftover into next month'],limit:['Minijob-Grenze (€)','Minijob limit (€)'],over:['Über der Minijob-Grenze!','Above the Minijob limit!'],
-cats:['Kategorien & Monatsbudget','Categories & monthly budget'],gloss:['Begriffe','Glossary'],reset:['Alles löschen','Delete everything'],
+bycat:['Nach Kategorie','By category'],sem:['Semesterbeitrag-Rücklage','Semester fee fund'],monthly:['Pro Zeitraum zurücklegen','Set aside per period'],saved:['Angespart','Saved'],
+fee:['Semesterbeitrag (€)','Semester fee (€)'],start:['Semesterstart','Semester start'],
+roll:['Restbetrag in den nächsten Zeitraum übertragen','Roll leftover into next period'],limit:['Minijob-Grenze (€)','Minijob limit (€)'],over:['Über der Minijob-Grenze!','Above the Minijob limit!'],
+cats:['Kategorien & Budget / Zeitraum','Categories & budget / period'],gloss:['Begriffe','Glossary'],reset:['Alles löschen','Delete everything'],
+periods:['Zeiträume (Von – Bis)','Periods (from – to)'],autoh:['Standard: Kalendermonate. Mit „Hinzufügen“ eigene Zeiträume anlegen, z. B. 15.11.–30.11., dann 01.12.–30.12. Einnahmen und Fixkosten gelten voll pro Zeitraum.','Default: calendar months. Tap “Add” for custom periods, e.g. 15 Nov–30 Nov, then 1 Dec–30 Dec. Income and fixed costs apply in full to each period.'],
 export:['Export','Export'],import:['Import (JSON einfügen)','Import (paste JSON)'],do_imp:['Importieren','Import'],copy:['Kopieren','Copy'],
 card:['Karte','Card'],cash:['Bar','Cash'],pp:['PayPal','PayPal'],
 rent:['Warmmiete','Rent (incl. utilities)'],kv:['Krankenkasse','Health insurance'],rf:['Rundfunkbeitrag','TV/radio fee'],dt:['Deutschlandticket','Transit pass'],net:['Internet & Handy','Internet & phone'],
@@ -68,14 +68,13 @@ g1:['Warmmiete = Kaltmiete + Nebenkosten (Heizung, Wasser, Müll)','Warm rent = 
 g2:['Sperrkonto: Konto als Finanzierungsnachweis mit fester Monatsrate','Blocked account: proof of funds, fixed monthly payout'],
 g3:['Rückmeldung: Semesterbeitrag zahlen, um eingeschrieben zu bleiben','Re-registration: pay the fee to stay enrolled'],
 g4:['Rundfunkbeitrag: 18,36 € pro Monat und Wohnung (WG teilen)','TV/radio fee: €18.36 per month per household (split in a flat)']};
-const id=()=>Date.now()+Math.random();
-const def=()=>({mode:'both',roll:true,limit:603,track:'',sem:{fee:350,start:10},
-income:[{id:1,k:'sperr',a:992},{id:2,k:'job',a:0},{id:3,k:'fam',a:0}],
-fixed:[{id:4,k:'rent',a:450},{id:5,k:'kv',a:125},{id:6,k:'rf',a:18.36},{id:7,k:'dt',a:63},{id:8,k:'net',a:30}],
+const id=()=>String(Date.now()+Math.random());
+const def=()=>({mode:'both',roll:true,limit:603,periods:[],sem:{fee:350,start:10},
+income:[{id:'1',k:'sperr',a:992},{id:'2',k:'job',a:0},{id:'3',k:'fam',a:0}],
+fixed:[{id:'4',k:'rent',a:450},{id:'5',k:'kv',a:125},{id:'6',k:'rf',a:18.36},{id:'7',k:'dt',a:63},{id:'8',k:'net',a:30}],
 cats:[{id:'groc',e:'🛒',b:200},{id:'dine',e:'🍽️',b:80},{id:'fun',e:'🎉',b:50},{id:'trans',e:'🚌',b:20},{id:'oth',e:'🧾',b:0}],tx:[]});
-let S=def(),tab='home',ym=new Date().toISOString().slice(0,7),pm='card',editId=null,adding=null;
+let S=def(),tab='home',pk=null,pm='card',editId=null,adding=null;
 try{const r=localStorage.getItem(KEY);if(r)S=Object.assign(def(),JSON.parse(r))}catch(e){}
-if(S.track&&S.track>ym)ym=S.track;
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
 const t=k=>{const[d,e]=T[k]||[k,k];return S.mode==='de'?d:S.mode==='en'?e:(d===e?d:d+' · '+e)};
 const nm=o=>o.k?t(o.k):(o.l||t(o.id));
@@ -84,54 +83,71 @@ const eur=n=>nf.format(n||0);
 const num=v=>{v=String(v).trim();const n=parseFloat(v.includes(',')?v.replace(/\./g,'').replace(',','.'):v);return isNaN(n)?0:n};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const sum=a=>a.reduce((s,x)=>s+(+x.a||0),0);
-const prev=m=>{const d=new Date(m+'-01');d.setMonth(d.getMonth()-1);return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')};
-const nowYM=()=>new Date().toISOString().slice(0,7);
-function base(m){
- const tx=S.tx.filter(x=>x.date.startsWith(m)),spent={};let exp=0,extra=0;
+const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const today=()=>iso(new Date());
+const addDays=(s,n)=>{const d=new Date(s+'T12:00:00');d.setDate(d.getDate()+n);return iso(d)};
+const eom=s=>{const d=new Date(s+'T12:00:00');return iso(new Date(d.getFullYear(),d.getMonth()+1,0))};
+const fd=s=>s.slice(8)+'.'+s.slice(5,7)+'.';
+function periods(){
+ if(S.periods.length)return S.periods.slice().sort((a,b)=>a.s.localeCompare(b.s));
+ const n=new Date(),out=[];
+ for(let i=-3;i<24;i++){const s=iso(new Date(n.getFullYear(),n.getMonth()+i,1));out.push({id:'a'+i,s,e:eom(s)})}
+ return out;
+}
+function curP(){
+ const ps=periods();let p=ps.find(x=>x.s===pk);
+ if(!p){const d=today();p=ps.find(x=>d>=x.s&&d<=x.e)||ps.find(x=>x.s>d)||ps[ps.length-1]}
+ pk=p.s;return p;
+}
+function base(p){
+ const tx=S.tx.filter(x=>x.date>=p.s&&x.date<=p.e),spent={};let exp=0,extra=0;
  tx.forEach(x=>{if(x.type==='inc')extra+=x.amt;else{spent[x.cat]=(spent[x.cat]||0)+x.amt;exp+=x.amt}});
  return{tx,spent,exp,extra,b:sum(S.income)+extra-sum(S.fixed)-S.sem.fee/6-exp};
 }
-function bal(m,first){return m<first?0:base(m).b+(S.roll?bal(prev(m),first):0)}
+function bal(ps,i){return base(ps[i]).b+(S.roll&&i>0?bal(ps,i-1):0)}
 function calc(){
- const first=S.track||S.tx.reduce((a,x)=>x.date.slice(0,7)<a?x.date.slice(0,7):a,nowYM());
- const c=base(ym),carry=S.roll&&ym>first?bal(prev(ym),first):0;
- const now=new Date(),cur=ym===nowYM(),dim=new Date(+ym.slice(0,4),+ym.slice(5),0).getDate();
- return{...c,carry,left:c.b+carry,dl:cur?dim-now.getDate()+1:0};
+ const ps=periods(),p=curP(),i=ps.indexOf(p),c=base(p),d=today();
+ const carry=S.roll&&i>0?bal(ps,i-1):0;
+ const cur=d>=p.s&&d<=p.e,dl=cur?Math.round((new Date(p.e+'T12:00:00')-new Date(d+'T12:00:00'))/864e5)+1:0;
+ return{...c,carry,left:c.b+carry,dl,p,ps,i};
 }
-const mLabel=()=>new Date(ym+'-01').toLocaleDateString('de-DE',{month:'long',year:'numeric'});
-const monthBar=()=>`<div class="mon"><button class="btn" data-m="-1">‹</button><b>${mLabel()}</b><button class="btn" data-m="1">›</button></div>`;
-
+const plabel=p=>`${fd(p.s)}–${fd(p.e)}${p.e.slice(0,4)}`;
+function periodBar(c){
+ return `<div class="mon"><button class="btn" data-pn="-1">‹</button><select data-pk style="font-weight:700">${c.ps.map(p=>`<option value="${p.s}" ${p.s===c.p.s?'selected':''}>${plabel(p)}</option>`).join('')}</select><button class="btn" data-pn="1">›</button></div>`;
+}
 function listCard(title,key,arr,kind){
  const rows=arr.map(o=>`<div class="row"><span>${esc(nm(o))}</span><span><b>${kind==='tx'?'+':''}${eur(o.a)}</b> <button class="x" data-rm="${key}:${o.id}">✕</button></span></div>`).join('');
  const form=adding===key?`<div class="g g3" style="margin-top:6px"><input id="a-l" placeholder="${t('label')}"><input id="a-a" inputmode="decimal" placeholder="0,00"><button class="btn p" data-addok="${key}">OK</button></div>`:'';
  return `<div class="card"><h2><span>${title}</span><button class="btn s" data-add="${key}">${t('add')}</button></h2>${rows||'<div class="mu">–</div>'}${form}
  <div class="row" style="border-top:1px solid var(--bd);margin-top:4px"><span class="mu">Σ</span><b>${eur(sum(arr))}</b></div></div>`;
 }
+const defDate=p=>{const d=today();return d>=p.s&&d<=p.e?d:p.s};
 function viewHome(){
- const c=calc(),extra=c.tx.filter(x=>x.type==='inc').map(x=>({id:x.id,l:(x.note||'+')+' · '+x.date.slice(8)+'.'+x.date.slice(5,7)+'.',a:x.amt}));
+ const c=calc(),p=c.p,extra=c.tx.filter(x=>x.type==='inc').map(x=>({id:x.id,l:(x.note||'+')+' · '+fd(x.date),a:x.amt}));
  const exps=c.tx.filter(x=>x.type==='exp').sort((a,b)=>b.date.localeCompare(a.date));
  const ed=S.tx.find(x=>x.id===editId);
- const mo=+ym.slice(5),el=Math.min(6,((mo-S.sem.start+12)%12)+1),sm=S.sem.fee/6;
- return monthBar()+`
+ const mo=+p.s.slice(5,7),el=Math.min(6,((mo-S.sem.start+12)%12)+1),sm=S.sem.fee/6;
+ return periodBar(c)+`
  <div class="card hero"><h2 style="color:#ffffffb3">${t('left')}</h2><div class="big ${c.left<0?'neg':''}">${eur(c.left)}</div>
  ${c.dl?`<div class="mu">≈ ${eur(Math.max(0,c.left)/c.dl)} ${t('perday')} · ${c.dl} d</div>`:''}
  ${c.carry?`<div class="mu">${t('carry')}: ${eur(c.carry)}</div>`:''}</div>
  <div class="card"><h2>${ed?t('editx'):t('newx')}</h2>
- <div class="seg">${[['card','card'],['cash','cash'],['pp','pp']].map(([k,v])=>`<button class="btn ${(ed?ed.pm:pm)===k?'on':''}" data-pm="${k}">${t(v)}</button>`).join('')}</div>
+ <div class="seg">${['card','cash','pp'].map(k=>`<button class="btn ${(ed?ed.pm:pm)===k?'on':''}" data-pm="${k}">${t(k)}</button>`).join('')}</div>
  <div class="g g2"><select id="f-c">${S.cats.map(k=>`<option value="${k.id}" ${ed&&ed.cat===k.id?'selected':''}>${k.e} ${esc(nm(k))}</option>`).join('')}</select>
  <input id="f-a" inputmode="decimal" placeholder="12,50" value="${ed?String(ed.amt).replace('.',','):''}"></div>
- <div class="g g2" style="margin-top:8px"><input id="f-n" maxlength="60" placeholder="${t('note')}" value="${ed?esc(ed.note):''}"><input id="f-d" type="date" value="${ed?ed.date:(ym===nowYM()?new Date().toISOString().slice(0,10):ym+'-01')}"></div>
+ <div class="g g2" style="margin-top:8px"><input id="f-n" maxlength="60" placeholder="${t('note')}" value="${ed?esc(ed.note):''}"><input id="f-d" type="date" min="${p.s}" max="${p.e}" value="${ed?ed.date:defDate(p)}"></div>
  <div style="margin-top:10px;display:flex;gap:8px"><button class="btn p" style="flex:1" data-save>${t('save')}</button>${ed?`<button class="btn" data-cancel>${t('cancel')}</button>`:''}</div></div>
- <div class="card"><h2>${t('exps')}</h2>${exps.length?exps.map(x=>{const k=S.cats.find(c=>c.id===x.cat)||{e:'🧾',id:x.cat};return `<div class="row"><div><b>${k.e} ${esc(nm(k))}</b><div class="mu">${x.date.slice(8)}.${x.date.slice(5,7)}. · ${t(x.pm)}${x.note?' · '+esc(x.note):''}</div></div><div><b>−${eur(x.amt)}</b><button class="x" data-ed="${x.id}">✎</button><button class="x" data-rm="tx:${x.id}">✕</button></div></div>`}).join(''):`<div class="mu">${t('none')}</div>`}</div>
- <div class="card"><h2>${t('bycat')}</h2>${S.cats.map(k=>{const s=c.spent[k.id]||0,p=k.b>0?Math.min(100,s/k.b*100):0;return `<div style="margin:8px 0"><div class="row" style="padding:0"><span>${k.e} ${esc(nm(k))}</span><b>${eur(s)}${k.b>0?' / '+eur(k.b):''}</b></div>${k.b>0?`<div class="bar ${s>k.b?'o':''}"><i style="width:${p}%"></i></div>`:''}</div>`}).join('')}</div>
+ <div class="card"><h2>${t('exps')}</h2>${exps.length?exps.map(x=>{const k=S.cats.find(c=>c.id===x.cat)||{e:'🧾',id:x.cat};return `<div class="row"><div><b>${k.e} ${esc(nm(k))}</b><div class="mu">${fd(x.date)} · ${t(x.pm)}${x.note?' · '+esc(x.note):''}</div></div><div><b>−${eur(x.amt)}</b><button class="x" data-ed="${x.id}">✎</button><button class="x" data-rm="tx:${x.id}">✕</button></div></div>`}).join(''):`<div class="mu">${t('none')}</div>`}</div>
+ <div class="card"><h2>${t('bycat')}</h2>${S.cats.map(k=>{const s=c.spent[k.id]||0,pc=k.b>0?Math.min(100,s/k.b*100):0;return `<div style="margin:8px 0"><div class="row" style="padding:0"><span>${k.e} ${esc(nm(k))}</span><b>${eur(s)}${k.b>0?' / '+eur(k.b):''}</b></div>${k.b>0?`<div class="bar ${s>k.b?'o':''}"><i style="width:${pc}%"></i></div>`:''}</div>`}).join('')}</div>
  ${listCard(t('extra'),'extra',extra,'tx')}
  <div class="card"><h2>${t('sem')}</h2><div class="row"><span>${t('monthly')}</span><b>${eur(sm)}</b></div><div class="row"><span>${t('saved')}</span><b>${eur(sm*el)} / ${eur(S.sem.fee)}</b></div><div class="bar"><i style="width:${el/6*100}%"></i></div></div>`;
 }
-function catRows(){return S.cats.map(k=>`<div class="row"><span>${k.e} ${esc(nm(k))}</span><span><input style="width:90px;text-align:right" inputmode="decimal" data-cb="${k.id}" value="${String(k.b).replace('.',',')}"> <button class="x" data-rm="cat:${k.id}">✕</button></span></div>`).join('')}
+const catRows=()=>S.cats.map(k=>`<div class="row"><span>${k.e} ${esc(nm(k))}</span><span><input style="width:90px;text-align:right" inputmode="decimal" data-cb="${k.id}" value="${String(k.b).replace('.',',')}"> <button class="x" data-rm="cat:${k.id}">✕</button></span></div>`).join('');
 function viewSet(){
- return listCard(t('inc'),'income',S.income)+(sum(S.income.filter(o=>o.k==='job'))>S.limit?`<div class="card neg">${t('over')}</div>`:'')
+ return `<div class="card"><h2><span>${t('periods')}</span><button class="btn s" data-padd>${t('add')}</button></h2>
+ ${S.periods.length?periods().map(p=>`<div class="g g4" style="margin:6px 0"><input type="date" data-ps="${p.id}" data-f="s" value="${p.s}"><input type="date" data-ps="${p.id}" data-f="e" value="${p.e}"><button class="x" data-rm="per:${p.id}">✕</button></div>`).join(''):`<div class="mu">${t('autoh')}</div>`}</div>`
+ +listCard(t('inc'),'income',S.income)+(sum(S.income.filter(o=>o.k==='job'))>S.limit?`<div class="card neg">${t('over')}</div>`:'')
  +listCard(t('fix'),'fixed',S.fixed)
- +`<div class="card"><h2>${t('track')}</h2><select data-track><option value="">–</option>${Array.from({length:27},(_,i)=>{const d=new Date();d.setDate(1);d.setMonth(d.getMonth()-2+i);const v=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');return `<option value="${v}" ${S.track===v?'selected':''}>${d.toLocaleDateString('de-DE',{month:'long',year:'numeric'})}</option>`}).join('')}</select></div>`
  +`<div class="card"><h2>${t('cats')}</h2>${catRows()}
  ${adding==='cat'?`<div class="g g3" style="margin-top:6px"><input id="a-l" placeholder="🎓 ${t('label')}"><input id="a-a" inputmode="decimal" placeholder="€"><button class="btn p" data-addok="cat">OK</button></div>`:`<button class="btn s" data-add="cat">${t('add')}</button>`}</div>
  <div class="card"><h2>${t('sem')}</h2><div class="g g2"><div><div class="mu">${t('fee')}</div><input data-fee inputmode="decimal" value="${String(S.sem.fee).replace('.',',')}"></div>
@@ -154,41 +170,50 @@ function render(){
 document.addEventListener('click',e=>{
  const b=e.target.closest('button');if(!b)return;const d=b.dataset;
  if(d.tab){tab=d.tab;adding=null;render()}
- else if(d.m){const x=new Date(ym+'-01');x.setMonth(x.getMonth()+ +d.m);const ny=x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0');if(S.track&&ny<S.track)return;ym=ny;render()}
+ else if(d.pn){const ps=periods(),i=ps.findIndex(x=>x.s===curP().s)+ +d.pn;if(ps[i]){pk=ps[i].s;render()}}
  else if(d.lang!==undefined){S.mode={both:'de',de:'en',en:'both'}[S.mode];save();render()}
  else if(d.pm){pm=d.pm;render()}
+ else if(d.padd!==undefined){
+  const ps=S.periods.length?periods():[],n=new Date();
+  const s=ps.length?addDays(ps[ps.length-1].e,1):iso(new Date(n.getFullYear(),n.getMonth()+1,1));
+  S.periods.push({id:id(),s,e:eom(s)});pk=s;save();render();
+ }
  else if(d.add){adding=d.add;render()}
  else if(d.addok){
   const l=document.getElementById('a-l').value.trim(),a=num(document.getElementById('a-a').value);
   if(d.addok==='cat'){if(l){const m=l.match(/^(\p{Extended_Pictographic}\S*)\s+(.*)$/u);S.cats.push({id:'c'+Date.now(),e:m?m[1]:'📌',l:m?m[2]:l,b:a})}}
-  else if(d.addok==='extra'){if(a>0)S.tx.push({id:id(),type:'inc',amt:a,cat:'',pm:'',date:ym===nowYM()?new Date().toISOString().slice(0,10):ym+'-01',note:l})}
+  else if(d.addok==='extra'){if(a>0)S.tx.push({id:id(),type:'inc',amt:a,cat:'',pm:'',date:defDate(curP()),note:l})}
   else if(a>0||l)S[d.addok].push({id:id(),l:l||'–',a});
   adding=null;save();render();
  }
- else if(d.rm){const[k,i]=d.rm.split(':');
-  if(k==='tx')S.tx=S.tx.filter(x=>String(x.id)!==i);else if(k==='extra')S.tx=S.tx.filter(x=>String(x.id)!==i);
-  else if(k==='cat')S.cats=S.cats.filter(x=>x.id!==i);else S[k]=S[k].filter(x=>String(x.id)!==i);
+ else if(d.rm){const i=d.rm.indexOf(':'),k=d.rm.slice(0,i),v=d.rm.slice(i+1);
+  if(k==='tx'||k==='extra')S.tx=S.tx.filter(x=>x.id!==v);
+  else if(k==='cat')S.cats=S.cats.filter(x=>x.id!==v);
+  else if(k==='per'){S.periods=S.periods.filter(x=>x.id!==v);pk=null}
+  else S[k]=S[k].filter(x=>x.id!==v);
   save();render()}
- else if(d.ed){editId=+d.ed||d.ed;editId=S.tx.find(x=>String(x.id)===String(d.ed)).id;render();window.scrollTo(0,200)}
+ else if(d.ed){editId=d.ed;render();window.scrollTo(0,200)}
  else if(d.cancel!==undefined){editId=null;render()}
  else if(d.save!==undefined){
   const a=num(document.getElementById('f-a').value);if(a<=0)return document.getElementById('f-a').focus();
-  const o={type:'exp',amt:a,cat:document.getElementById('f-c').value,pm,date:document.getElementById('f-d').value||new Date().toISOString().slice(0,10),note:document.getElementById('f-n').value};
+  const o={type:'exp',amt:a,cat:document.getElementById('f-c').value,pm,date:document.getElementById('f-d').value||defDate(curP()),note:document.getElementById('f-n').value};
   if(editId){Object.assign(S.tx.find(x=>x.id===editId),o);editId=null}else S.tx.push({id:id(),...o});
-  ym=o.date.slice(0,7);save();render();
+  save();render();
  }
  else if(d.x){window._x=d.x;render()}
  else if(d.copy!==undefined){const el=document.getElementById('exp');el.select();try{navigator.clipboard.writeText(el.value)}catch(_){}}
- else if(d.imp!==undefined){try{const o=JSON.parse(document.getElementById('imp').value);if(!Array.isArray(o.tx))throw 0;S=Object.assign(def(),o);save();tab='home';render()}catch(_){alert('JSON?')}}
- else if(d.reset!==undefined){if(confirm('Delete everything?')){S=def();save();tab='home';render()}}
+ else if(d.imp!==undefined){try{const o=JSON.parse(document.getElementById('imp').value);if(!Array.isArray(o.tx))throw 0;S=Object.assign(def(),o);pk=null;save();tab='home';render()}catch(_){alert('JSON?')}}
+ else if(d.reset!==undefined){if(confirm('Delete everything?')){S=def();pk=null;save();tab='home';render()}}
 });
 document.addEventListener('change',e=>{
  const el=e.target,d=el.dataset;
- if(d.cb)S.cats.find(c=>c.id===d.cb).b=num(el.value);
+ if(d.pk!==undefined){pk=el.value;render();return}
+ if(d.ps){const o=S.periods.find(x=>x.id===d.ps);if(!o||!el.value)return render();
+  if(d.f==='s'&&pk===o.s)pk=el.value;o[d.f]=el.value;if(o.e<o.s)o.e=o.s}
+ else if(d.cb)S.cats.find(c=>c.id===d.cb).b=num(el.value);
  else if(d.fee!==undefined)S.sem.fee=num(el.value);
  else if(d.start!==undefined)S.sem.start=+el.value;
  else if(d.lim!==undefined)S.limit=num(el.value);
- else if(d.track!==undefined){S.track=el.value;if(S.track&&ym<S.track)ym=S.track}
  else if(d.roll!==undefined)S.roll=el.checked;
  else return;
  save();render();
